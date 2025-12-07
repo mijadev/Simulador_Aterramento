@@ -2,15 +2,15 @@
 
 Simulador interactivo para visualizar y calcular sistemas de aterramento de antenas con Three.js.
 
-## 🚀 Instalación
+## Instalación
 
 ```bash
-cd /home/mija/.gemini/antigravity/scratch/grounding-sim
+cd ruta/del/proyecto
 npm install
 npm run dev
 ```
 
-## 🎮 Controles
+## Controles
 
 | Acción | Control |
 |--------|---------|
@@ -20,7 +20,7 @@ npm run dev
 | Editar terreno | Ctrl + Click izquierdo |
 | Mover antena | Click izquierdo + arrastrar |
 
-## ⚙️ Panel de Controles (lil-gui)
+## Panel de Controles (lil-gui)
 
 - **Antena**: Altura del mástil, número de radiales
 - **Varillas**: Cantidad, longitud, diámetro
@@ -29,14 +29,14 @@ npm run dev
 - **Hora**: Día/Noche
 - **Terreno**: Modo edición, tamaño de pincel
 
-## 📊 Métricas
+## Métricas
 
 - **Rt**: Resistencia total de puesta a tierra (Ω)
 - **Eficiencia**: Porcentaje de dispersión
 - **Corriente**: Corriente de falla (A)
 - **Estado**: Bueno/Advertencia/Peligro
 
-## 🔬 Fórmulas
+## Fórmulas
 
 **Resistencia de una varilla:**
 ```
@@ -48,7 +48,7 @@ R = (ρ / 2πL) × ln(4L/d)
 Rt = R / n × (1 + λ(n-1))
 ```
 
-## 📁 Estructura
+## Estructura
 
 ```
 grounding-sim/
