@@ -1,0 +1,240 @@
+<!DOCTYPE html>
+<html lang="es">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Simulador de Aterramento de Antenas 3D</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            overflow: hidden;
+            background: #0a0a0f;
+        }
+
+        #canvas-container {
+            width: 100vw;
+            height: 100vh;
+            position: relative;
+        }
+
+        canvas {
+            display: block;
+        }
+
+        #metrics-panel {
+            position: fixed;
+            top: 20px;
+            left: 20px;
+            background: rgba(10, 10, 20, 0.85);
+            backdrop-filter: blur(10px);
+            border: 1px solid rgba(0, 200, 255, 0.3);
+            border-radius: 12px;
+            padding: 20px;
+            color: #fff;
+            min-width: 280px;
+            box-shadow: 0 8px 32px rgba(0, 0, 0, 0.4);
+            z-index: 100;
+        }
+
+        #metrics-panel h2 {
+            font-size: 16px;
+            color: #00c8ff;
+            margin-bottom: 15px;
+            padding-bottom: 10px;
+            border-bottom: 1px solid rgba(0, 200, 255, 0.2);
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        #metrics-panel h2::before {
+            content: '⚡';
+        }
+
+        .metric {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 8px 0;
+            border-bottom: 1px solid rgba(255, 255, 255, 0.05);
+        }
+
+        .metric-label {
+            color: #888;
+            font-size: 13px;
+        }
+
+        .metric-value {
+            font-weight: 600;
+            font-size: 14px;
+            color: #00ff88;
+        }
+
+        .metric-value.warning {
+            color: #ffaa00;
+        }
+
+        .metric-value.danger {
+            color: #ff4444;
+        }
+
+        #status-bar {
+            position: fixed;
+            bottom: 20px;
+            left: 50%;
+            transform: translateX(-50%);
+            background: rgba(10, 10, 20, 0.85);
+            backdrop-filter: blur(10px);
+            border: 1px solid rgba(0, 200, 255, 0.3);
+            border-radius: 30px;
+            padding: 12px 30px;
+            color: #fff;
+            font-size: 13px;
+            display: flex;
+            gap: 30px;
+            z-index: 100;
+        }
+
+        .status-item {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .status-dot {
+            width: 8px;
+            height: 8px;
+            border-radius: 50%;
+            background: #00ff88;
+            animation: pulse 2s infinite;
+        }
+
+        @keyframes pulse {
+
+            0%,
+            100% {
+                opacity: 1;
+            }
+
+            50% {
+                opacity: 0.5;
+            }
+        }
+
+        #loading {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: #0a0a0f;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            z-index: 1000;
+            transition: opacity 0.5s;
+        }
+
+        #loading.hidden {
+            opacity: 0;
+            pointer-events: none;
+        }
+
+        .loader {
+            width: 60px;
+            height: 60px;
+            border: 3px solid rgba(0, 200, 255, 0.1);
+            border-top-color: #00c8ff;
+            border-radius: 50%;
+            animation: spin 1s linear infinite;
+        }
+
+        @keyframes spin {
+            to {
+                transform: rotate(360deg);
+            }
+        }
+
+        #loading p {
+            color: #00c8ff;
+            margin-top: 20px;
+            font-size: 14px;
+        }
+
+        .mode-indicator {
+            position: fixed;
+            top: 20px;
+            right: 20px;
+            background: rgba(10, 10, 20, 0.85);
+            backdrop-filter: blur(10px);
+            border: 1px solid rgba(0, 200, 255, 0.3);
+            border-radius: 8px;
+            padding: 10px 20px;
+            color: #00c8ff;
+            font-size: 12px;
+            z-index: 100;
+        }
+    </style>
+</head>
+
+<body>
+    <div id="loading">
+        <div class="loader"></div>
+        <p>Cargando simulador...</p>
+    </div>
+
+    <div id="canvas-container"></div>
+
+    <div id="metrics-panel">
+        <h2>Métricas de Aterramento</h2>
+        <div class="metric">
+            <span class="metric-label">Resistencia Total (Rt)</span>
+            <span class="metric-value" id="resistance-value">-- Ω</span>
+        </div>
+        <div class="metric">
+            <span class="metric-label">Eficiencia</span>
+            <span class="metric-value" id="efficiency-value">-- %</span>
+        </div>
+        <div class="metric">
+            <span class="metric-label">Corriente de Dispersión</span>
+            <span class="metric-value" id="current-value">-- A</span>
+        </div>
+        <div class="metric">
+            <span class="metric-label">Resistividad del Suelo</span>
+            <span class="metric-value" id="resistivity-value">-- Ω·m</span>
+        </div>
+        <div class="metric">
+            <span class="metric-label">Estado</span>
+            <span class="metric-value" id="status-value">--</span>
+        </div>
+    </div>
+
+    <div class="mode-indicator" id="mode-indicator">
+        Modo: Navegación | Click derecho + arrastrar para rotar
+    </div>
+
+    <div id="status-bar">
+        <div class="status-item">
+            <span class="status-dot"></span>
+            <span id="weather-status">Soleado</span>
+        </div>
+        <div class="status-item">
+            <span id="time-status">🌞 Día</span>
+        </div>
+        <div class="status-item">
+            <span id="soil-status">Suelo: Arcilloso</span>
+        </div>
+    </div>
+
+    <script type="module" src="/src/main.js"></script>
+</body>
+
+</html>
